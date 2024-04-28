@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <title>La Torre di Hanoi</title>
+    <link rel="icon" type="image/png" href="forAndroid.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="mystyle.css">
+    <style>
+        .disk {
+            height: 35px;
+        }
+
+        #victoryMessage {
+            font-size: 24px;
+            font-weight: bold;
+            color: green; /* Cambia colore a tuo piacimento */
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <center><h1>La Torre di Hanoi</h1></center>
+    </header>
+    <main>
+        <div class="container">
+            <div class="row">
+                <div id="pole1" class="col-4"></div>
+                <div id="pole2" class="col-4"></div>
+                <div id="pole3" class="col-4"></div>
+            </div>
+            <div class="row" style="margin-top:20px;">
+                <div class="col-4">
+                    <center><button id="btn1" class="btn btn-primary" onclick="clickHandler(1)">Prendi</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button id="btn2" class="btn btn-primary" onclick="clickHandler(2)">Prendi</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button id="btn3" class="btn btn-primary" onclick="clickHandler(3)">Prendi</button></center>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <center><button id="addDiskBtn" class="btn btn-success" onclick="aggiungiPezzo()">Aggiungi Disco</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button class="btn btn-secondary mt-3" onclick="goToRegolamento()">Regolamento</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button class="btn btn-primary mt-3" onclick="goToTutorial()">Tutorial</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button id="changeColorBtn" class="btn btn-info mt-3" onclick="changeBackgroundColor()">Cambia Colore</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button class="btn btn-danger mt-3" onclick="resetPage()">Resetta Pagina</button></center>
+                </div>
+                <div class="col-4">
+                    <center><button class="btn btn-warning mt-3" onclick="winGame()">Vinci automaticamente</button></center>
+                </div>
+                <div class="col-12">
+                    <center><p id="moveCounter">Mosse: 0</p></center>
+                    <center><p id="victoryMessage"></p></center>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4"></div>
+                <div id="mano" class="col-4"></div>
+                <div class="col-4"></div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <center><p>&copy; Moscarelli Fabiano</p></center>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>
+        var palo1 = [1, 2, 3, 4];
+        var palo2 = [];
+        var palo3 = [];
+        var mano = 0;
+        var numeroPezzi = 4;
+        var maxPezzi = 8;
+        var mosse = 0;
+
+        function drawDisk(dimension) {
+            if (dimension === undefined) {
+                return "";
+            }
+
+            let randomColor = getRandomColor();
+            return "<div class='disk' style='background-color: " + randomColor + ";width:" + dimension * 10 + "%;'></div>";
+        }
+
+        function getPalo(num) {
+            if (num === 1) {
+                return palo1;
+            } else if (num === 2) {
+                return palo2;
+            } else {
+                return palo3;
+            }
+        }
+
+        function drawPalo(num) {
+            let divPalo = document.getElementById("pole" + num);
+            let palo = getPalo(num);
+            divPalo.innerHTML = "";
+            for (let i = 0; i < palo.length; i++) {
+                divPalo.innerHTML += drawDisk(palo[i]);
+            }
+        }
+
+        function drawAll() {
+            drawPalo(1);
+            drawPalo(2);
+            drawPalo(3);
+            checkButtons();
+        }
+
+        function checkButtons() {
+            checkButton(1);
+            checkButton(2);
+            checkButton(3);
+            checkVictory();
+        }
+
+        function checkButton(n) {
+            let btn = document.getElementById("btn" + n);
+            let palo = getPalo(n);
+            if (mano === 0) {
+                btn.disabled = palo.length === 0;
+                btn.innerText = "Prendi";
+            } else {
+                btn.disabled = palo.length > 0 && mano > palo[0];
+                btn.innerText = "Metti";
+            }
+            btn.classList.remove("btn-danger");
+            btn.classList.add("btn-primary");
+
+            var button = document.getElementById("addDiskBtn");
+            button.disabled = !(numeroPezzi < maxPezzi && palo1.length === numeroPezzi);
+        }
+
+        function clickHandler(paloNum) {
+            let palo = getPalo(paloNum);
+
+            if (mano === 0) {
+                if (palo.length > 0) {
+                    mano = palo.shift();
+                }
+            } else {
+                if (palo.length === 0 || mano < palo[0]) {
+                    palo.unshift(mano);
+                    mano = 0;
+                    mosse++;
+                    updateMoveCounter();
+                }
+            }
+
+            drawAll();
+        }
+
+        function resetTorre() {
+            palo1 = [1, 2, 3, 4];
+            palo2 = [];
+            palo3 = [];
+            mano = 0;
+            mosse = 0;
+            updateMoveCounter();
+            drawAll();
+        }
+
+        function aggiungiPezzo() {
+            if (numeroPezzi < maxPezzi) {
+                getPalo(1).push(++numeroPezzi);
+                drawAll();
+            }
+        }
+
+        function changeBackgroundColor() {
+            document.body.style.backgroundColor = getRandomColor();
+        }
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function goToRegolamento() {
+            window.location.href = "regolamento.html";
+        }
+
+        function goToTutorial() {
+            window.location.href = "tutorial.html";
+        }
+
+        function resetPage() {
+            location.reload();
+        }
+
+        function updateMoveCounter() {
+            var moveCounterElement = document.getElementById("moveCounter");
+            moveCounterElement.innerText = "Mosse: " + mosse;
+        }
+
+        function checkVictory() {
+            if (palo3.length === numeroPezzi) {
+                var victoryMessageElement = document.getElementById("victoryMessage");
+                victoryMessageElement.innerText = "Hai vinto! Complimenti!";
+            }
+        }
+
+        function winGame() {
+            palo3 = palo3.concat(palo1);
+            palo1 = [];
+            palo2 = [];
+            mano = 0;
+            mosse++;
+            updateMoveCounter();
+            drawAll();
+            checkVictory();
+        }
+
+        drawAll();
+    </script>
+</body>
+</html>
